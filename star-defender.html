@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Star Defender — Cookie Club 🍪</title>
+<meta name="description" content="Pilot a friendly little starship and zap falling meteors before they land! Move with arrow keys or your finger, tap or press Space to zap.">
+<meta property="og:title" content="Star Defender — Cookie Club">
+<meta property="og:description" content="Pilot a friendly little starship and zap falling meteors before they land!">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://eaiz.net/star-defender.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #4A90D9;
+  --indigo: #5C6BC0;
+  --indigo-dark: #3949AB;
+  --gold: #F2B134;
+  --dark: #2c3e50;
+  --light: #f8f9fa;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Baloo 2', 'Nunito', sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--light);
+  color: var(--dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.site-header {
+  background: white;
+  border-bottom: 3px solid var(--indigo);
+  padding: 0.75rem 1rem;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.header-inner {
+  max-width: 800px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--dark); }
+.logo-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.logo-text { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
+.back-link {
+  font-weight: 700; font-size: 0.9rem; text-decoration: none; color: var(--indigo-dark);
+  background: rgba(92,107,192,0.12); padding: 0.45rem 0.9rem; border-radius: var(--radius-sm);
+}
+.container { max-width: 560px; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+.screen { display: none; }
+.screen.active { display: block; }
+.start-screen { text-align: center; }
+.game-icon { font-size: 4rem; }
+.start-screen h1 {
+  font-family: var(--font-display); font-size: 2.4rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-dark));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tagline { color: #636E72; font-size: 1.05rem; margin: 0.25rem 0 1.25rem; }
+.best-score-box {
+  display: inline-block; background: white; border: 2px solid var(--gold);
+  border-radius: var(--radius); padding: 0.6rem 1.6rem; margin-bottom: 1.25rem;
+}
+.best-score-box .label { font-size: 0.8rem; font-weight: 700; color: #B8860B; text-transform: uppercase; letter-spacing: 0.05em; }
+.best-score-box .score { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--dark); }
+.how-to {
+  background: white; border: 2px solid #E8ECF0; border-radius: var(--radius);
+  padding: 1rem 1.25rem; text-align: left; margin: 0 auto 1.5rem; max-width: 440px;
+}
+.how-to h2 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.4rem; }
+.how-to ul { padding-left: 1.2rem; line-height: 1.6; color: #3d4750; }
+.btn {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 800;
+  border: none; border-radius: var(--radius); cursor: pointer;
+  padding: 0.85rem 2.4rem; transition: all var(--transition);
+}
+.btn-start { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); color: white; box-shadow: 0 4px 16px rgba(92,107,192,0.4); }
+.btn-start:hover { transform: translateY(-2px); }
+.btn-secondary { background: white; color: var(--dark); border: 2px solid #E8ECF0; font-size: 1rem; padding: 0.6rem 1.4rem; }
+.game-hud {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; margin-bottom: 0.6rem; font-size: 1rem; flex-wrap: wrap; gap: 0.3rem 0.8rem;
+}
+.hud-score { color: var(--indigo-dark); font-family: var(--font-display); font-size: 1.15rem; }
+.hud-shields { color: var(--blue-dark, #2E6CB5); }
+.canvas-wrap {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25); line-height: 0;
+}
+#game-canvas { display: block; width: 100%; height: auto; background: #0D1030; touch-action: none; }
+.overlay {
+  position: absolute; inset: 0; display: none; line-height: 1.4;
+  align-items: center; justify-content: center; text-align: center;
+  background: rgba(255,255,255,0.9); padding: 1.5rem;
+}
+.overlay.show { display: flex; }
+.overlay-card h2 { font-family: var(--font-display); font-size: 1.9rem; margin-bottom: 0.4rem; }
+.overlay-card p { color: #3d4750; margin-bottom: 1rem; }
+.overlay-card .final-score { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; color: var(--indigo-dark); }
+.overlay-card .btn { margin: 0.25rem; }
+.touch-controls {
+  display: none; margin-top: 1rem;
+  grid-template-columns: 1fr 1.4fr 1fr; gap: 0.6rem;
+}
+.touch-controls button {
+  font-size: 1.3rem; padding: 0.9rem 0; border: 2px solid #C5CAE9; background: white;
+  border-radius: var(--radius-sm); cursor: pointer; touch-action: none;
+  user-select: none; -webkit-user-select: none;
+}
+.touch-controls button:active { background: #E8EAF6; }
+@media (pointer: coarse) { .touch-controls { display: grid; } }
+.controls-row { text-align: center; margin-top: 0.9rem; }
+.page-footer { text-align: center; color: #636E72; font-size: 0.9rem; padding: 0 1rem 2.5rem; line-height: 1.6; }
+.page-footer a { color: var(--indigo-dark); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <span style="font-size:2rem" aria-hidden="true">🍪</span>
+      <span class="logo-text">Cookie Club</span>
+    </a>
+    <a href="games.html" class="back-link">🎮 All Games</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div class="screen start-screen active" id="start-screen">
+    <div class="game-icon" aria-hidden="true">🚀</div>
+    <h1>Star Defender</h1>
+    <p class="tagline">Meteors are tumbling toward Cookie Planet! Zap them into sparkles before they land.</p>
+
+    <div class="best-score-box" id="best-score-box" hidden>
+      <div class="label">Your Best</div>
+      <div class="score" id="best-score-display">0</div>
+    </div>
+
+    <div class="how-to">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Steer your ship with the <strong>arrow keys</strong>, your <strong>mouse</strong>, or your <strong>finger</strong>.</li>
+        <li>Press <strong>Space</strong>, tap, or use the <strong>ZAP!</strong> button to fire a sparkle beam.</li>
+        <li>Every meteor you zap scores <strong>10 points</strong>. Big meteors split into two little ones!</li>
+        <li>If a meteor lands, it bonks one of your 3 shields 🛡️. Protect the planet!</li>
+      </ul>
+    </div>
+
+    <button type="button" class="btn btn-start" id="start-btn">▶ Start Defending</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="game-screen">
+    <div class="game-hud">
+      <span class="hud-score">Score: <span id="score-display">0</span></span>
+      <span class="hud-shields" id="shields-display">🛡️🛡️🛡️</span>
+      <span style="color:#636E72;">Best: <span id="hud-best-display">0</span></span>
+      <button type="button" class="btn btn-secondary" id="pause-btn" style="padding:0.35rem 1rem;">⏸ Pause</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="game-canvas" width="480" height="560" aria-label="Star Defender game board"></canvas>
+      <div class="overlay" id="pause-overlay">
+        <div class="overlay-card">
+          <h2>⏸ Paused</h2>
+          <p>Your ship is floating quietly among the stars.</p>
+          <button type="button" class="btn btn-start" id="resume-btn">▶ Keep Going</button>
+          <button type="button" class="btn btn-secondary" id="quit-btn">🏠 Menu</button>
+        </div>
+      </div>
+      <div class="overlay" id="over-overlay">
+        <div class="overlay-card">
+          <h2>🌟 Great Defending, Captain!</h2>
+          <p>Your final score is</p>
+          <div class="final-score" id="final-score">0</div>
+          <p id="new-best-line" hidden>🎉 That's a new best score!</p>
+          <button type="button" class="btn btn-start" id="again-btn">↻ Play Again</button>
+          <button type="button" class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="touch-controls" aria-hidden="true">
+      <button type="button" id="btn-left" aria-label="Move left">⬅️</button>
+      <button type="button" id="btn-zap">⚡ ZAP!</button>
+      <button type="button" id="btn-right" aria-label="Move right">➡️</button>
+    </div>
+    <div class="controls-row">
+      <p style="color:#636E72;font-size:0.9rem;">Tip: press <strong>P</strong> to pause. Meteors fall a little faster the longer you play!</p>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <p><a href="games.html">← Back to all games</a></p>
+  <p>Star Defender is an original, clean-room remake of the classic fixed-shooter arcade game, written from scratch for Cookie Club. No aliens were zapped — only meteors!<br>
+  It is open source under the MIT License — see the code at <a href="https://github.com/rayhe/cookie-club-arcade" target="_blank" rel="noopener">github.com/rayhe/cookie-club-arcade</a>.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+  var W = 480, H = 560, GROUND = H - 26;
+  var canvas = document.getElementById('game-canvas');
+  var ctx = canvas.getContext('2d');
+  var BEST_KEY = 'starDefenderBest';
+
+  var ship, beams, meteors, sparkles, score, shields, running, paused, rafId, lastTime;
+  var spawnTimer, elapsed, fireCooldown;
+  var keys = { left: false, right: false };
+  var touchDir = 0;
+  var best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0;
+
+  var startScreen = document.getElementById('start-screen');
+  var gameScreen = document.getElementById('game-screen');
+  var scoreDisplay = document.getElementById('score-display');
+  var shieldsDisplay = document.getElementById('shields-display');
+  var hudBest = document.getElementById('hud-best-display');
+  var pauseOverlay = document.getElementById('pause-overlay');
+  var overOverlay = document.getElementById('over-overlay');
+
+  function showScreen(el) {
+    startScreen.classList.remove('active');
+    gameScreen.classList.remove('active');
+    el.classList.add('active');
+  }
+  function refreshMenuBest() {
+    var box = document.getElementById('best-score-box');
+    if (best > 0) {
+      box.hidden = false;
+      document.getElementById('best-score-display').textContent = best;
+    } else {
+      box.hidden = true;
+    }
+  }
+  function updateHud() {
+    scoreDisplay.textContent = score;
+    hudBest.textContent = best;
+    var s = '';
+    for (var i = 0; i < shields; i++) s += '🛡️';
+    shieldsDisplay.textContent = s || '💔';
+  }
+  function reset() {
+    ship = { x: W / 2, y: GROUND - 30, w: 38, speed: 380 };
+    beams = [];
+    meteors = [];
+    sparkles = [];
+    score = 0;
+    shields = 3;
+    spawnTimer = 0.4;
+    elapsed = 0;
+    fireCooldown = 0;
+    updateHud();
+  }
+  function start() {
+    reset();
+    running = true;
+    paused = false;
+    pauseOverlay.classList.remove('show');
+    overOverlay.classList.remove('show');
+    showScreen(gameScreen);
+    lastTime = null;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+    draw();
+  }
+  function spawnMeteor(big) {
+    var r = big ? 20 + Math.random() * 6 : 11 + Math.random() * 4;
+    var baseFall = 62 + Math.min(elapsed * 2.2, 90);
+    meteors.push({
+      x: 30 + Math.random() * (W - 60),
+      y: -r,
+      r: r,
+      vx: (Math.random() * 44 - 22),
+      vy: baseFall * (0.85 + Math.random() * 0.4) * (big ? 0.9 : 1.15),
+      spin: Math.random() * Math.PI * 2,
+      big: !!big
+    });
+  }
+  function fire() {
+    if (!running || paused || fireCooldown > 0) return;
+    beams.push({ x: ship.x, y: ship.y - 22, vy: -560 });
+    fireCooldown = 0.22;
+  }
+  function burst(x, y, color, n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var sp = 40 + Math.random() * 110;
+      sparkles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.45, color: color });
+    }
+  }
+  function loop(ts) {
+    if (!running) return;
+    if (lastTime === null) lastTime = ts;
+    var dt = Math.min((ts - lastTime) / 1000, 0.033);
+    lastTime = ts;
+    if (!paused) { update(dt); draw(); }
+    rafId = requestAnimationFrame(loop);
+  }
+  function update(dt) {
+    elapsed += dt;
+    if (fireCooldown > 0) fireCooldown -= dt;
+    if (keys.left || touchDir < 0) ship.x -= ship.speed * dt;
+    if (keys.right || touchDir > 0) ship.x += ship.speed * dt;
+    if (ship.x < ship.w / 2) ship.x = ship.w / 2;
+    if (ship.x > W - ship.w / 2) ship.x = W - ship.w / 2;
+
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) {
+      spawnMeteor(Math.random() < 0.55);
+      spawnTimer = Math.max(0.45, 1.15 - elapsed * 0.012) * (0.7 + Math.random() * 0.6);
+    }
+
+    var i, j;
+    for (i = beams.length - 1; i >= 0; i--) {
+      beams[i].y += beams[i].vy * dt;
+      if (beams[i].y < -12) beams.splice(i, 1);
+    }
+    for (i = meteors.length - 1; i >= 0; i--) {
+      var m = meteors[i];
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+      m.spin += dt * 1.5;
+      if (m.x < m.r) { m.x = m.r; m.vx = Math.abs(m.vx); }
+      if (m.x > W - m.r) { m.x = W - m.r; m.vx = -Math.abs(m.vx); }
+      var hit = false;
+      for (j = beams.length - 1; j >= 0; j--) {
+        var dx = beams[j].x - m.x, dy = beams[j].y - m.y;
+        if (dx * dx + dy * dy < (m.r + 6) * (m.r + 6)) {
+          beams.splice(j, 1);
+          hit = true;
+          break;
+        }
+      }
+      if (hit) {
+        burst(m.x, m.y, m.big ? '#FFB74D' : '#CE93D8', m.big ? 14 : 8);
+        score += 10;
+        if (m.big) {
+          for (var k = 0; k < 2; k++) {
+            meteors.push({
+              x: m.x + (k === 0 ? -14 : 14), y: m.y, r: 11 + Math.random() * 3,
+              vx: (k === 0 ? -52 : 52), vy: m.vy * 0.9,
+              spin: Math.random() * Math.PI * 2, big: false
+            });
+          }
+        }
+        meteors.splice(i, 1);
+        updateHud();
+        continue;
+      }
+      if (m.y + m.r >= GROUND) {
+        burst(m.x, GROUND, '#A1887F', 10);
+        meteors.splice(i, 1);
+        shields--;
+        updateHud();
+        if (shields <= 0) { gameOver(); return; }
+      }
+    }
+    for (i = sparkles.length - 1; i >= 0; i--) {
+      var s = sparkles[i];
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.life -= dt;
+      if (s.life <= 0) sparkles.splice(i, 1);
+    }
+  }
+  function gameOver() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    var isNewBest = score > best;
+    if (isNewBest) {
+      best = score;
+      localStorage.setItem(BEST_KEY, String(best));
+    }
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('new-best-line').hidden = !isNewBest;
+    overOverlay.classList.add('show');
+    refreshMenuBest();
+  }
+  function drawShip() {
+    var x = ship.x, y = ship.y;
+    ctx.fillStyle = '#FF7043';
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y + 16);
+    ctx.lineTo(x, y + 26 + Math.random() * 5);
+    ctx.lineTo(x + 6, y + 16);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#90CAF9';
+    ctx.beginPath();
+    ctx.moveTo(x - 17, y + 14);
+    ctx.lineTo(x - 5, y - 2);
+    ctx.lineTo(x - 5, y + 14);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x + 17, y + 14);
+    ctx.lineTo(x + 5, y - 2);
+    ctx.lineTo(x + 5, y + 14);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#E3F2FD';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 24);
+    ctx.quadraticCurveTo(x + 10, y - 6, x + 8, y + 16);
+    ctx.lineTo(x - 8, y + 16);
+    ctx.quadraticCurveTo(x - 10, y - 6, x, y - 24);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#42A5F5';
+    ctx.beginPath(); ctx.arc(x, y - 6, 5, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawMeteor(m) {
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.spin);
+    ctx.fillStyle = m.big ? '#8D6E63' : '#A1887F';
+    ctx.beginPath();
+    var pts = 8;
+    for (var i = 0; i < pts; i++) {
+      var a = (i / pts) * Math.PI * 2;
+      var r = m.r * (0.82 + ((i * 37) % 10) / 38);
+      var px = Math.cos(a) * r, py = Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.arc(-m.r * 0.3, -m.r * 0.2, m.r * 0.28, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(m.r * 0.35, m.r * 0.3, m.r * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function draw() {
+    ctx.fillStyle = '#0D1030';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    var stars = [[25, 40], [90, 130], [150, 60], [210, 180], [265, 35], [330, 120], [395, 70], [450, 200], [60, 300], [440, 330], [180, 420], [350, 460]];
+    for (var i = 0; i < stars.length; i++) {
+      ctx.beginPath(); ctx.arc(stars[i][0], stars[i][1], 1.7, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = '#2E7D32';
+    ctx.beginPath();
+    ctx.ellipse(W / 2, H + 90, W * 0.75, 120, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#43A047';
+    ctx.beginPath();
+    ctx.ellipse(W / 2, H + 96, W * 0.75, 120, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#FFD54F';
+    ctx.lineWidth = 3;
+    for (var b = 0; b < beams.length; b++) {
+      ctx.beginPath();
+      ctx.moveTo(beams[b].x, beams[b].y + 10);
+      ctx.lineTo(beams[b].x, beams[b].y - 4);
+      ctx.stroke();
+    }
+    for (var m = 0; m < meteors.length; m++) drawMeteor(meteors[m]);
+    for (var s = 0; s < sparkles.length; s++) {
+      var sp = sparkles[s];
+      ctx.globalAlpha = Math.max(sp.life / 0.45, 0);
+      ctx.fillStyle = sp.color;
+      ctx.beginPath(); ctx.arc(sp.x, sp.y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    drawShip();
+  }
+  function pauseGame() {
+    if (!running || overOverlay.classList.contains('show')) return;
+    paused = true;
+    pauseOverlay.classList.add('show');
+  }
+  function resumeGame() { paused = false; pauseOverlay.classList.remove('show'); }
+  function quitToMenu() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    pauseOverlay.classList.remove('show');
+    overOverlay.classList.remove('show');
+    refreshMenuBest();
+    showScreen(startScreen);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); keys.left = true; }
+    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); keys.right = true; }
+    else if (e.key === ' ') {
+      e.preventDefault();
+      if (!gameScreen.classList.contains('active') || overOverlay.classList.contains('show')) start();
+      else fire();
+    }
+    else if (e.key === 'p' || e.key === 'P') { if (paused) resumeGame(); else pauseGame(); }
+  });
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+  });
+
+  function canvasPosX(clientX) {
+    var rect = canvas.getBoundingClientRect();
+    return (clientX - rect.left) * (W / rect.width);
+  }
+  canvas.addEventListener('mousemove', function(e) {
+    if (!running) return;
+    ship.x = Math.max(ship.w / 2, Math.min(W - ship.w / 2, canvasPosX(e.clientX)));
+  });
+  canvas.addEventListener('mousedown', function() { fire(); });
+  canvas.addEventListener('touchstart', function(e) {
+    if (!running) return;
+    ship.x = Math.max(ship.w / 2, Math.min(W - ship.w / 2, canvasPosX(e.touches[0].clientX)));
+    fire();
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function(e) {
+    if (!running) return;
+    e.preventDefault();
+    ship.x = Math.max(ship.w / 2, Math.min(W - ship.w / 2, canvasPosX(e.touches[0].clientX)));
+  }, { passive: false });
+
+  function bindHold(id, dirVal) {
+    var el = document.getElementById(id);
+    el.addEventListener('touchstart', function(e) { e.preventDefault(); touchDir = dirVal; }, { passive: false });
+    el.addEventListener('touchend', function() { touchDir = 0; });
+    el.addEventListener('mousedown', function() { touchDir = dirVal; });
+    el.addEventListener('mouseup', function() { touchDir = 0; });
+    el.addEventListener('mouseleave', function() { touchDir = 0; });
+  }
+  bindHold('btn-left', -1);
+  bindHold('btn-right', 1);
+  document.getElementById('btn-zap').addEventListener('touchstart', function(e) { e.preventDefault(); fire(); }, { passive: false });
+  document.getElementById('btn-zap').addEventListener('mousedown', function() { fire(); });
+
+  document.getElementById('start-btn').addEventListener('click', start);
+  document.getElementById('again-btn').addEventListener('click', start);
+  document.getElementById('pause-btn').addEventListener('click', function() {
+    if (paused) resumeGame(); else pauseGame();
+  });
+  document.getElementById('resume-btn').addEventListener('click', resumeGame);
+  document.getElementById('quit-btn').addEventListener('click', quitToMenu);
+  document.getElementById('menu-btn').addEventListener('click', quitToMenu);
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) pauseGame();
+  });
+
+  reset();
+  draw();
+  refreshMenuBest();
+
+  window.__arcade = {
+    name: 'star-defender',
+    getScore: function() { return score; },
+    isRunning: function() { return !!running; },
+    start: start,
+    fire: fire,
+    getShip: function() { return { x: Math.round(ship.x) }; },
+    getCounts: function() { return { beams: beams.length, meteors: meteors.length }; }
+  };
+})();
+</script>
+</body>
+</html>

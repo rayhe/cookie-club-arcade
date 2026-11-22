@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Penguin Pong — Cookie Club 🍪</title>
+<meta name="description" content="Play paddle pong against Pip the Penguin! Slide your paddle, bounce the snowball, and be first to 5 points. Mouse, touch, or arrow keys.">
+<meta property="og:title" content="Penguin Pong — Cookie Club">
+<meta property="og:description" content="Play paddle pong against Pip the Penguin! Bounce the snowball and be first to 5 points.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://eaiz.net/pong.html">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #4A90D9;
+  --blue-dark: #2E6CB5;
+  --teal: #4ECDC4;
+  --gold: #F2B134;
+  --dark: #2c3e50;
+  --light: #f8f9fa;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Baloo 2', 'Nunito', sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--light);
+  color: var(--dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.site-header {
+  background: white;
+  border-bottom: 3px solid var(--blue);
+  padding: 0.75rem 1rem;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.header-inner {
+  max-width: 800px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--dark); }
+.logo-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.logo-text { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
+.back-link {
+  font-weight: 700; font-size: 0.9rem; text-decoration: none; color: var(--blue-dark);
+  background: rgba(74,144,217,0.1); padding: 0.45rem 0.9rem; border-radius: var(--radius-sm);
+}
+.container { max-width: 620px; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+.screen { display: none; }
+.screen.active { display: block; }
+.start-screen { text-align: center; }
+.game-icon { font-size: 4rem; }
+.start-screen h1 {
+  font-family: var(--font-display); font-size: 2.4rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tagline { color: #636E72; font-size: 1.05rem; margin: 0.25rem 0 1.25rem; }
+.best-score-box {
+  display: inline-block; background: white; border: 2px solid var(--gold);
+  border-radius: var(--radius); padding: 0.6rem 1.6rem; margin-bottom: 1.25rem;
+}
+.best-score-box .label { font-size: 0.8rem; font-weight: 700; color: #B8860B; text-transform: uppercase; letter-spacing: 0.05em; }
+.best-score-box .score { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--dark); }
+.how-to {
+  background: white; border: 2px solid #E8ECF0; border-radius: var(--radius);
+  padding: 1rem 1.25rem; text-align: left; margin: 0 auto 1.5rem; max-width: 460px;
+}
+.how-to h2 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.4rem; }
+.how-to ul { padding-left: 1.2rem; line-height: 1.6; color: #3d4750; }
+.btn {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 800;
+  border: none; border-radius: var(--radius); cursor: pointer;
+  padding: 0.85rem 2.4rem; transition: all var(--transition);
+}
+.btn-start { background: linear-gradient(135deg, var(--blue), var(--teal)); color: white; box-shadow: 0 4px 16px rgba(74,144,217,0.4); }
+.btn-start:hover { transform: translateY(-2px); }
+.btn-secondary { background: white; color: var(--dark); border: 2px solid #E8ECF0; font-size: 1rem; padding: 0.6rem 1.4rem; }
+.game-hud {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; margin-bottom: 0.6rem; font-size: 1rem; flex-wrap: wrap; gap: 0.3rem 0.8rem;
+}
+.hud-score { font-family: var(--font-display); font-size: 1.3rem; }
+.hud-you { color: var(--blue-dark); }
+.hud-pip { color: #E67E22; }
+.canvas-wrap {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2); line-height: 0;
+}
+#game-canvas { display: block; width: 100%; height: auto; background: #DFF3FA; touch-action: none; }
+.overlay {
+  position: absolute; inset: 0; display: none; line-height: 1.4;
+  align-items: center; justify-content: center; text-align: center;
+  background: rgba(255,255,255,0.9); padding: 1.5rem;
+}
+.overlay.show { display: flex; }
+.overlay-card h2 { font-family: var(--font-display); font-size: 1.9rem; margin-bottom: 0.4rem; }
+.overlay-card p { color: #3d4750; margin-bottom: 1rem; }
+.overlay-card .final-score { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; color: var(--blue-dark); }
+.overlay-card .btn { margin: 0.25rem; }
+.touch-controls {
+  display: none; margin-top: 1rem;
+  grid-template-columns: 1fr 1fr; gap: 0.6rem;
+}
+.touch-controls button {
+  font-size: 1.5rem; padding: 0.9rem 0; border: 2px solid #BDE0F5; background: white;
+  border-radius: var(--radius-sm); cursor: pointer; touch-action: none;
+  user-select: none; -webkit-user-select: none;
+}
+.touch-controls button:active { background: #EAF6FD; }
+@media (pointer: coarse) { .touch-controls { display: grid; } }
+.controls-row { text-align: center; margin-top: 0.9rem; }
+.page-footer { text-align: center; color: #636E72; font-size: 0.9rem; padding: 0 1rem 2.5rem; line-height: 1.6; }
+.page-footer a { color: var(--blue-dark); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <span style="font-size:2rem" aria-hidden="true">🍪</span>
+      <span class="logo-text">Cookie Club</span>
+    </a>
+    <a href="games.html" class="back-link">🎮 All Games</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div class="screen start-screen active" id="start-screen">
+    <div class="game-icon" aria-hidden="true">🐧</div>
+    <h1>Penguin Pong</h1>
+    <p class="tagline">Bounce the snowball past Pip the Penguin — first to 5 points wins the match!</p>
+
+    <div class="best-score-box" id="best-score-box" hidden>
+      <div class="label">Matches You Won</div>
+      <div class="score" id="best-score-display">0</div>
+    </div>
+
+    <div class="how-to">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Your paddle is on the <strong>left</strong>. Move it with your <strong>mouse</strong>, your <strong>finger</strong>, or the <strong>up and down arrow keys</strong>.</li>
+        <li>Bounce the snowball back. If it slips past Pip, you score a point!</li>
+        <li>Hit the ball with the edge of your paddle to send it off at a sneaky angle.</li>
+        <li>Pip gets a tiny bit quicker after every point, but never too fast. First to <strong>5</strong> wins!</li>
+      </ul>
+    </div>
+
+    <button type="button" class="btn btn-start" id="start-btn">▶ Start the Match</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="game-screen">
+    <div class="game-hud">
+      <span class="hud-score"><span class="hud-you">You <span id="you-display">0</span></span> · <span class="hud-pip"><span id="pip-display">0</span> Pip</span></span>
+      <span id="rally-display" style="color:#636E72;">Rally: 0</span>
+      <button type="button" class="btn btn-secondary" id="pause-btn" style="padding:0.35rem 1rem;">⏸ Pause</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="game-canvas" width="560" height="400" aria-label="Penguin Pong game board"></canvas>
+      <div class="overlay" id="pause-overlay">
+        <div class="overlay-card">
+          <h2>⏸ Paused</h2>
+          <p>Pip is warming up his flippers.</p>
+          <button type="button" class="btn btn-start" id="resume-btn">▶ Keep Going</button>
+          <button type="button" class="btn btn-secondary" id="quit-btn">🏠 Menu</button>
+        </div>
+      </div>
+      <div class="overlay" id="over-overlay">
+        <div class="overlay-card">
+          <h2 id="over-title">🎉 You Win!</h2>
+          <p id="over-message">What a match!</p>
+          <div class="final-score" id="final-score">5 – 3</div>
+          <button type="button" class="btn btn-start" id="again-btn">↻ Play Again</button>
+          <button type="button" class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="touch-controls" aria-hidden="true">
+      <button type="button" id="btn-up">⬆️ Up</button>
+      <button type="button" id="btn-down">Down ⬇️</button>
+    </div>
+    <div class="controls-row">
+      <p style="color:#636E72;font-size:0.9rem;">Tip: press <strong>P</strong> to pause. Long rallies make Pip smile!</p>
+    </div>
+  </div>
+
+</div>
+
+<footer class="page-footer">
+  <p><a href="games.html">← Back to all games</a></p>
+  <p>Penguin Pong is an original, clean-room remake of the classic paddle-and-ball arcade game, written from scratch for Cookie Club.<br>
+  It is open source under the MIT License — see the code at <a href="https://github.com/rayhe/cookie-club-arcade" target="_blank" rel="noopener">github.com/rayhe/cookie-club-arcade</a>.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+  var W = 560, H = 400, WIN_SCORE = 5;
+  var canvas = document.getElementById('game-canvas');
+  var ctx = canvas.getContext('2d');
+  var WINS_KEY = 'penguinPongWins';
+
+  var you, pip, ball, youScore, pipScore, rally, running, paused, serveTimer, rafId, lastTime;
+  var keys = { up: false, down: false };
+  var touchDir = 0;
+  var wins = parseInt(localStorage.getItem(WINS_KEY) || '0', 10) || 0;
+
+  var startScreen = document.getElementById('start-screen');
+  var gameScreen = document.getElementById('game-screen');
+  var youDisplay = document.getElementById('you-display');
+  var pipDisplay = document.getElementById('pip-display');
+  var rallyDisplay = document.getElementById('rally-display');
+  var pauseOverlay = document.getElementById('pause-overlay');
+  var overOverlay = document.getElementById('over-overlay');
+
+  function showScreen(el) {
+    startScreen.classList.remove('active');
+    gameScreen.classList.remove('active');
+    el.classList.add('active');
+  }
+  function refreshMenuBest() {
+    var box = document.getElementById('best-score-box');
+    if (wins > 0) {
+      box.hidden = false;
+      document.getElementById('best-score-display').textContent = wins;
+    } else {
+      box.hidden = true;
+    }
+  }
+  function serve(towardYou) {
+    var speed = 250 + (youScore + pipScore) * 14;
+    var angle = (Math.random() * 0.7 - 0.35);
+    var dirX = towardYou ? -1 : 1;
+    ball = {
+      x: W / 2, y: H / 2 + (Math.random() * 80 - 40), r: 9,
+      vx: dirX * Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      speed: speed
+    };
+    rally = 0;
+    serveTimer = 0.7;
+    updateHud();
+  }
+  function reset() {
+    you = { w: 13, h: 78, x: 16, y: (H - 78) / 2, speed: 460 };
+    pip = { w: 13, h: 78, x: W - 29, y: (H - 78) / 2, speed: 175 };
+    youScore = 0;
+    pipScore = 0;
+    serve(false);
+  }
+  function updateHud() {
+    youDisplay.textContent = youScore;
+    pipDisplay.textContent = pipScore;
+    rallyDisplay.textContent = 'Rally: ' + rally;
+  }
+  function start() {
+    reset();
+    running = true;
+    paused = false;
+    pauseOverlay.classList.remove('show');
+    overOverlay.classList.remove('show');
+    showScreen(gameScreen);
+    lastTime = null;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(loop);
+    draw();
+  }
+  function loop(ts) {
+    if (!running) return;
+    if (lastTime === null) lastTime = ts;
+    var dt = Math.min((ts - lastTime) / 1000, 0.033);
+    lastTime = ts;
+    if (!paused) { update(dt); draw(); }
+    rafId = requestAnimationFrame(loop);
+  }
+  function update(dt) {
+    if (keys.up || touchDir < 0) you.y -= you.speed * dt;
+    if (keys.down || touchDir > 0) you.y += you.speed * dt;
+    if (you.y < 0) you.y = 0;
+    if (you.y > H - you.h) you.y = H - you.h;
+
+    /* Pip follows the ball gently, with a small wobble so kids can win rallies. */
+    var pipSpeed = pip.speed + (youScore + pipScore) * 9;
+    var target = ball.y + Math.sin(performance.now() / 480) * 14;
+    var center = pip.y + pip.h / 2;
+    if (ball.vx > 0) {
+      if (target < center - 6) pip.y -= pipSpeed * dt;
+      else if (target > center + 6) pip.y += pipSpeed * dt;
+    } else {
+      var home = (H - pip.h) / 2;
+      if (pip.y < home - 4) pip.y += pipSpeed * 0.5 * dt;
+      else if (pip.y > home + 4) pip.y -= pipSpeed * 0.5 * dt;
+    }
+    if (pip.y < 0) pip.y = 0;
+    if (pip.y > H - pip.h) pip.y = H - pip.h;
+
+    if (serveTimer > 0) {
+      serveTimer -= dt;
+      return;
+    }
+    ball.x += ball.vx * dt;
+    ball.y += ball.vy * dt;
+
+    if (ball.y < ball.r) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
+    if (ball.y > H - ball.r) { ball.y = H - ball.r; ball.vy = -Math.abs(ball.vy); }
+
+    if (ball.vx < 0 && ball.x - ball.r <= you.x + you.w && ball.x - ball.r >= you.x - 4 &&
+        ball.y >= you.y - ball.r && ball.y <= you.y + you.h + ball.r) {
+      var relY = (ball.y - (you.y + you.h / 2)) / (you.h / 2);
+      relY = Math.max(-0.9, Math.min(0.9, relY));
+      var angY = relY * (Math.PI / 3.2);
+      ball.speed = Math.min(ball.speed + 12, 430);
+      ball.vx = Math.cos(angY) * ball.speed;
+      ball.vy = Math.sin(angY) * ball.speed;
+      ball.x = you.x + you.w + ball.r + 1;
+      rally++;
+      updateHud();
+    }
+    if (ball.vx > 0 && ball.x + ball.r >= pip.x && ball.x + ball.r <= pip.x + pip.w + 4 &&
+        ball.y >= pip.y - ball.r && ball.y <= pip.y + pip.h + ball.r) {
+      var relP = (ball.y - (pip.y + pip.h / 2)) / (pip.h / 2);
+      relP = Math.max(-0.9, Math.min(0.9, relP));
+      var angP = relP * (Math.PI / 3.2);
+      ball.vx = -Math.cos(angP) * ball.speed;
+      ball.vy = Math.sin(angP) * ball.speed;
+      ball.x = pip.x - ball.r - 1;
+      rally++;
+      updateHud();
+    }
+
+    if (ball.x + ball.r < 0) {
+      pipScore++;
+      updateHud();
+      if (pipScore >= WIN_SCORE) { gameOver(false); return; }
+      serve(true);
+    } else if (ball.x - ball.r > W) {
+      youScore++;
+      updateHud();
+      if (youScore >= WIN_SCORE) { gameOver(true); return; }
+      serve(false);
+    }
+  }
+  function gameOver(youWon) {
+    running = false;
+    cancelAnimationFrame(rafId);
+    if (youWon) {
+      wins++;
+      localStorage.setItem(WINS_KEY, String(wins));
+    }
+    document.getElementById('over-title').textContent = youWon ? '🎉 You Win the Match!' : '🐧 Pip Wins This One!';
+    document.getElementById('over-message').textContent = youWon
+      ? 'Pip claps his flippers for you. Great bouncing!'
+      : 'Pip does a happy little dance. Rematch?';
+    document.getElementById('final-score').textContent = youScore + ' – ' + pipScore;
+    overOverlay.classList.add('show');
+    refreshMenuBest();
+  }
+  function drawPaddle(p, color, flipper) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(p.x + 5, p.y);
+    ctx.arcTo(p.x + p.w, p.y, p.x + p.w, p.y + p.h, 5);
+    ctx.arcTo(p.x + p.w, p.y + p.h, p.x, p.y + p.h, 5);
+    ctx.arcTo(p.x, p.y + p.h, p.x, p.y, 5);
+    ctx.arcTo(p.x, p.y, p.x + p.w, p.y, 5);
+    ctx.closePath(); ctx.fill();
+    if (flipper) {
+      ctx.font = '20px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🐧', p.x + p.w / 2, p.y - 8);
+    }
+  }
+  function draw() {
+    ctx.fillStyle = '#DFF3FA';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, H - 14, W, 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    var flakes = [[40, 40], [150, 90], [300, 30], [430, 110], [520, 50], [90, 200], [480, 260], [230, 320], [360, 210]];
+    for (var i = 0; i < flakes.length; i++) {
+      ctx.beginPath(); ctx.arc(flakes[i][0], flakes[i][1], 2.4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(46,108,181,0.35)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 10]);
+    ctx.beginPath(); ctx.moveTo(W / 2, 8); ctx.lineTo(W / 2, H - 22); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(46,108,181,0.5)';
+    ctx.font = '800 44px "Baloo 2", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(youScore, W / 2 - 46, 58);
+    ctx.fillText(pipScore, W / 2 + 46, 58);
+    drawPaddle(you, '#2E6CB5', false);
+    drawPaddle(pip, '#455A64', true);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#90CAF9'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#B0BEC5';
+    ctx.beginPath(); ctx.arc(ball.x - 3, ball.y - 3, 1.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ball.x + 3, ball.y + 2, 1.6, 0, Math.PI * 2); ctx.fill();
+    if (serveTimer > 0 && running) {
+      ctx.fillStyle = 'rgba(44,62,80,0.75)';
+      ctx.font = '700 18px Nunito, sans-serif';
+      ctx.fillText('Get ready…', W / 2, H - 40);
+    }
+  }
+  function pauseGame() {
+    if (!running || overOverlay.classList.contains('show')) return;
+    paused = true;
+    pauseOverlay.classList.add('show');
+  }
+  function resumeGame() { paused = false; pauseOverlay.classList.remove('show'); }
+  function quitToMenu() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    pauseOverlay.classList.remove('show');
+    overOverlay.classList.remove('show');
+    refreshMenuBest();
+    showScreen(startScreen);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { e.preventDefault(); keys.up = true; }
+    else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { e.preventDefault(); keys.down = true; }
+    else if (e.key === 'p' || e.key === 'P') { if (paused) resumeGame(); else pauseGame(); }
+    else if (e.key === ' ' || e.key === 'Enter') {
+      if (!gameScreen.classList.contains('active') || overOverlay.classList.contains('show')) {
+        e.preventDefault(); start();
+      }
+    }
+  });
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = false;
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
+  });
+
+  function canvasPosY(clientY) {
+    var rect = canvas.getBoundingClientRect();
+    return (clientY - rect.top) * (H / rect.height);
+  }
+  canvas.addEventListener('mousemove', function(e) {
+    if (!running) return;
+    you.y = Math.max(0, Math.min(H - you.h, canvasPosY(e.clientY) - you.h / 2));
+  });
+  canvas.addEventListener('touchstart', function(e) {
+    if (!running) return;
+    you.y = Math.max(0, Math.min(H - you.h, canvasPosY(e.touches[0].clientY) - you.h / 2));
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function(e) {
+    if (!running) return;
+    e.preventDefault();
+    you.y = Math.max(0, Math.min(H - you.h, canvasPosY(e.touches[0].clientY) - you.h / 2));
+  }, { passive: false });
+
+  function bindHold(id, dirVal) {
+    var el = document.getElementById(id);
+    el.addEventListener('touchstart', function(e) { e.preventDefault(); touchDir = dirVal; }, { passive: false });
+    el.addEventListener('touchend', function() { touchDir = 0; });
+    el.addEventListener('mousedown', function() { touchDir = dirVal; });
+    el.addEventListener('mouseup', function() { touchDir = 0; });
+    el.addEventListener('mouseleave', function() { touchDir = 0; });
+  }
+  bindHold('btn-up', -1);
+  bindHold('btn-down', 1);
+
+  document.getElementById('start-btn').addEventListener('click', start);
+  document.getElementById('again-btn').addEventListener('click', start);
+  document.getElementById('pause-btn').addEventListener('click', function() {
+    if (paused) resumeGame(); else pauseGame();
+  });
+  document.getElementById('resume-btn').addEventListener('click', resumeGame);
+  document.getElementById('quit-btn').addEventListener('click', quitToMenu);
+  document.getElementById('menu-btn').addEventListener('click', quitToMenu);
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) pauseGame();
+  });
+
+  reset();
+  draw();
+  refreshMenuBest();
+
+  window.__arcade = {
+    name: 'penguin-pong',
+    getScore: function() { return youScore; },
+    getPipScore: function() { return pipScore; },
+    isRunning: function() { return !!running; },
+    start: start,
+    getBall: function() { return { x: Math.round(ball.x), y: Math.round(ball.y) }; },
+    getYou: function() { return { y: Math.round(you.y) }; }
+  };
+})();
+</script>
+</body>
+</html>
